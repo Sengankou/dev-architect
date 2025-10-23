@@ -21,7 +21,7 @@
     {
       "binding": "DEV_ARCHITECT_SESSIONS",
       "id": "210ebeec775d423eacb1e756f4247fe0",
-      "remote": true,
+      // "remote": true,
     },
   ],
   "d1_databases": [
@@ -29,14 +29,14 @@
       "binding": "dev_architect_db",
       "database_name": "dev_architect_db",
       "database_id": "87dac84e-d9a7-4f1f-8a93-a34f581534c3",
-      "remote": true,
+      // "remote": true,
     },
   ],
   "r2_buckets": [
     {
       "bucket_name": "dev-architect-uploads",
       "binding": "dev_architect_uploads",
-      "remote": true,
+      // "remote": true,
     },
   ],
   /**
