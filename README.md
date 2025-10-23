@@ -15,6 +15,28 @@ AIスタートアップのエンジニアリングマネージャー向けに、
 - **リンター・フォーマッター**: Biome
 - **言語**: TypeScript
 
+## ファイル構成
+
+```
+dev-architect/
+├── .specify/                    # Speckit設定・テンプレート
+│   ├── memory/
+│   │   └── constitution.md      # プロジェクト憲法（開発原則）
+│   └── templates/               # 仕様書・タスク生成テンプレート
+│       ├── spec-template.md
+│       ├── plan-template.md
+│       └── tasks-template.md
+├── src/
+│   └── index.ts                 # Honoアプリケーションエントリーポイント
+├── public/                      # 静的ファイル（Cloudflare Assets）
+│   └── index.html
+├── wrangler.jsonc               # Cloudflare Workers設定
+├── biome.json                   # Biome設定（リンター・フォーマッター）
+├── tsconfig.json                # TypeScript設定
+├── package.json                 # 依存関係・スクリプト
+└── worker-configuration.d.ts    # 自動生成された型定義（wrangler types）
+```
+
 ## Cloudflareリソース
 
 ### KV Namespace
