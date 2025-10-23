@@ -117,7 +117,7 @@
 
 - Mastraの`generateSpec`ワークフローは既に実装済み（Phase 1-3完了）
 - Gemini 2.5 Flash APIキーは環境変数`GOOGLE_GENERATIVE_AI_API_KEY`で提供される
-- D1データベースの`specs`テーブルは`wrangler.toml`で定義され、マイグレーションスクリプトで作成される
+- D1データベースの`specs`テーブルは`wrangler.jsonc`で定義され、マイグレーションスクリプトで作成される
 - Cloudflare Workers環境では、リクエストのデフォルトタイムアウトは存在するが、明示的に60秒でタイムアウト処理を実装する
 - Phase 1では認証・認可は実装せず、Phase 2以降で対応する
 - エラー発生時のログはConsole APIで出力し、後続フェーズでCloudflare Logsと統合する
@@ -128,7 +128,7 @@
 - Phase 1-2完了（mastra.config.ts作成、Gemini 2.5 Flash設定済み）
 - Phase 1-3完了（generateSpecワークフロー実装済み）
 - D1バインディング設定（Phase 1-5で実装予定だが、Phase 1-4では先行してスキーマ定義が必要）
-- wrangler.tomlにD1バインディング`dev_architect_db`が設定されている
+- wrangler.jsoncにD1バインディング`dev_architect_db`が設定されている
 
 ## Out of Scope
 

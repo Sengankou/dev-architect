@@ -126,7 +126,7 @@ src/
 
 - zod v4.1.12とai SDKのpeer dependency警告あり（動作には影響なし）
 - Gemini APIキーは環境変数`GOOGLE_GENERATIVE_AI_API_KEY`から取得する設定
-- wrangler.tomlが空の状態 → バインディング設定が必要
+- wrangler.jsoncにバインディング設定済み（D1、KV、R2）
 - TypeScript型チェック: ✅ エラーなし（npx tsc --noEmit）
 
 ---

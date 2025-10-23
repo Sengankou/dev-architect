@@ -1,0 +1,318 @@
+openapi: 3.0.3
+info:
+  title: Dev Architect API - Specification Generation
+  description: |
+    Phase 1-4: AI要件定義支援エージェントの仕様書生成API
+
+    エンジニアリングマネージャーが要件テキストを送信すると、AIが分析・アーキテクチャ設計・仕様書草稿を生成します。
+  version: 1.0.0
+  contact:
+    name: Dev Architect Team
+servers:
+  - url: http://localhost:8787
+    description: ローカル開発環境
+  - url: https://dev-architect.{your-subdomain}.workers.dev
+    description: 本番環境（Cloudflare Workers）
+
+paths:
+  /api/spec:
+    post:
+      summary: 仕様書生成
+      description: |
+        要件テキストを受け取り、AIが分析・アーキテクチャ・仕様書草稿を生成します。
+
+        **処理時間**: 最大60秒
+
+        **ペイロード制限**: 最大100KB
+      operationId: generateSpec
+      tags:
+        - Specification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpecRequest'
+            examples:
+              basic:
+                summary: 基本的な要件
+                value:
+                  requirements: "ユーザー認証機能を実装したい"
+              withProjectName:
+                summary: プロジェクト名付き
+                value:
+                  requirements: "ユーザー認証機能を実装したい"
+                  projectName: "MyApp"
+      responses:
+        '200':
+          description: 仕様書生成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpecResponse'
+              examples:
+                success:
+                  summary: 成功レスポンス
+                  value:
+                    analysis:
+                      summary: "ユーザー認証システムの実装"
+                      keyPoints:
+                        - "セキュアなパスワード管理"
+                        - "セッション管理"
+                      actors:
+                        - "エンドユーザー"
+                      mainFeatures:
+                        - "ログイン/ログアウト"
+                        - "パスワードリセット"
+                    architecture:
+                      overview: "3層アーキテクチャでの実装"
+                      components:
+                        - name: "認証サービス"
+                          description: "ユーザー認証を担当"
+                          responsibilities:
+                            - "パスワード検証"
+                            - "トークン発行"
+                      dataFlow: "クライアント → APIゲートウェイ → 認証サービス → データベース"
+                      technologies:
+                        - "JWT"
+                        - "bcrypt"
+                    specificationDraft: |
+                      # ユーザー認証機能仕様書
+
+                      ## 概要
+                      ユーザー認証システムを実装します。
+
+                      ## 機能要件
+                      - ユーザーはメールアドレスとパスワードでログインできる
+                      - パスワードは暗号化して保存する
+        '400':
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingRequirements:
+                  summary: 必須フィールド欠落
+                  value:
+                    error:
+                      message: "requirements is required"
+                      code: "INVALID_REQUEST"
+                emptyRequirements:
+                  summary: 空の要件
+                  value:
+                    error:
+                      message: "requirements must not be empty"
+                      code: "INVALID_REQUEST"
+        '413':
+          description: ペイロード過大
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                payloadTooLarge:
+                  summary: 100KBを超えるリクエスト
+                  value:
+                    error:
+                      message: "Request body too large"
+                      code: "PAYLOAD_TOO_LARGE"
+        '500':
+          description: サーバーエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                llmParseError:
+                  summary: LLMレスポンスパースエラー
+                  value:
+                    error:
+                      message: "Failed to parse LLM response"
+                      code: "LLM_PARSE_ERROR"
+                internalError:
+                  summary: 予期しないエラー
+                  value:
+                    error:
+                      message: "Internal server error"
+                      code: "INTERNAL_ERROR"
+        '504':
+          description: タイムアウト
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                timeout:
+                  summary: 60秒タイムアウト
+                  value:
+                    error:
+                      message: "Request timeout"
+                      code: "TIMEOUT"
+
+components:
+  schemas:
+    SpecRequest:
+      type: object
+      required:
+        - requirements
+      properties:
+        requirements:
+          type: string
+          description: 要件テキスト（必須、1文字以上、100KB以下）
+          minLength: 1
+          maxLength: 102400
+          example: "ユーザー認証機能を実装したい"
+        projectName:
+          type: string
+          description: プロジェクト名（任意、255文字以下）
+          maxLength: 255
+          example: "MyApp"
+          nullable: true
+
+    SpecResponse:
+      type: object
+      required:
+        - analysis
+        - architecture
+        - specificationDraft
+      properties:
+        analysis:
+          $ref: '#/components/schemas/Analysis'
+        architecture:
+          $ref: '#/components/schemas/Architecture'
+        specificationDraft:
+          type: string
+          description: 仕様書草稿（Markdown形式）
+          example: |
+            # ユーザー認証機能仕様書
+
+            ## 概要
+            ...
+
+    Analysis:
+      type: object
+      required:
+        - summary
+        - keyPoints
+        - actors
+        - mainFeatures
+      properties:
+        summary:
+          type: string
+          description: 要件の概要
+          example: "ユーザー認証システムの実装"
+        keyPoints:
+          type: array
+          description: 重要なポイント
+          items:
+            type: string
+          example:
+            - "セキュアなパスワード管理"
+            - "セッション管理"
+        actors:
+          type: array
+          description: システム利用者
+          items:
+            type: string
+          example:
+            - "エンドユーザー"
+            - "システム管理者"
+        mainFeatures:
+          type: array
+          description: 主要機能
+          items:
+            type: string
+          example:
+            - "ログイン/ログアウト"
+            - "パスワードリセット"
+
+    Architecture:
+      type: object
+      required:
+        - overview
+        - components
+        - dataFlow
+        - technologies
+      properties:
+        overview:
+          type: string
+          description: アーキテクチャの概要
+          example: "3層アーキテクチャでの実装"
+        components:
+          type: array
+          description: システムコンポーネント
+          items:
+            $ref: '#/components/schemas/Component'
+        dataFlow:
+          type: string
+          description: データフロー
+          example: "クライアント → APIゲートウェイ → 認証サービス → データベース"
+        technologies:
+          type: array
+          description: 推奨技術
+          items:
+            type: string
+          example:
+            - "JWT"
+            - "bcrypt"
+            - "PostgreSQL"
+
+    Component:
+      type: object
+      required:
+        - name
+        - description
+        - responsibilities
+      properties:
+        name:
+          type: string
+          description: コンポーネント名
+          example: "認証サービス"
+        description:
+          type: string
+          description: コンポーネントの説明
+          example: "ユーザー認証を担当するサービス"
+        responsibilities:
+          type: array
+          description: 責務
+          items:
+            type: string
+          example:
+            - "パスワード検証"
+            - "トークン発行"
+            - "セッション管理"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - message
+            - code
+          properties:
+            message:
+              type: string
+              description: エラーメッセージ
+              example: "Request body too large"
+            code:
+              type: string
+              description: エラーコード
+              enum:
+                - INVALID_REQUEST
+                - PAYLOAD_TOO_LARGE
+                - LLM_PARSE_ERROR
+                - TIMEOUT
+                - INTERNAL_ERROR
+              example: "PAYLOAD_TOO_LARGE"
+
+tags:
+  - name: Specification
+    description: 仕様書生成関連のエンドポイント
+
+externalDocs:
+  description: Dev Architect Documentation
+  url: https://github.com/your-org/dev-architect

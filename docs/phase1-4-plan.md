@@ -1,7 +1,7 @@
 # Phase 1-4 実装計画: /api/spec エンドポイント
 
-**作成日**: 2025-10-24  
-**ステータス**: 実装準備完了  
+**作成日**: 2025-10-24
+**ステータス**: 実装準備完了
 **前提条件**: Phase 1-3完了（generateSpecワークフロー実装済み）
 
 ---
@@ -147,7 +147,7 @@ spec.post("/", async (c) => {
     const input = GenerateSpecRequest.parse(body);
 
     // 2. タイムアウト設定（60秒）
-    const timeoutPromise = new Promise((_, reject) => 
+    const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error("TIMEOUT")), 60000)
     );
 
@@ -162,7 +162,7 @@ spec.post("/", async (c) => {
       INSERT INTO specs (requirements, project_name, analysis_json, architecture_json, spec_draft, created_at)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
-    
+
     await stmt.bind(
       input.requirements,
       input.projectName || null,
@@ -242,47 +242,23 @@ export default app;
 
 ---
 
-### タスク4: `wrangler.toml` 設定
+### タスク4: `wrangler.jsonc` 確認
 
-**変更内容**:
-1. D1データベースバインディング設定
-2. 環境変数の定義
+**現在の設定**:
+プロジェクトは`wrangler.jsonc`形式を使用しており、既に以下の設定が完了しています：
 
-```toml
-name = "dev-architect"
-main = "src/index.ts"
-compatibility_date = "2024-10-24"
+1. D1データベースバインディング（`dev_architect_db`）
+2. KVネームスペース（`DEV_ARCHITECT_SESSIONS`）
+3. R2バケット（`dev_architect_uploads`）
 
-# D1データベース
-[[d1_databases]]
-binding = "dev_architect_db"
-database_name = "dev-architect-db"
-database_id = "<database_id>"  # wrangler d1 create で取得
-
-# KVネームスペース（既存）
-[[kv_namespaces]]
-binding = "DEV_ARCHITECT_SESSIONS"
-id = "<kv_id>"
-
-# R2バケット（既存）
-[[r2_buckets]]
-binding = "dev_architect_uploads"
-bucket_name = "dev-architect-uploads"
-
-# 環境変数（開発用）
-[vars]
-NODE_ENV = "development"
-
-# シークレット（本番用）
-# wrangler secret put GOOGLE_GENERATIVE_AI_API_KEY
-```
+**確認項目**:
+- `wrangler.jsonc`にD1バインディング`dev_architect_db`が設定されていることを確認
+- データベースIDが正しく設定されていることを確認
 
 **セットアップコマンド**:
 ```bash
-# D1データベース作成
-pnpm wrangler d1 create dev-architect-db
-
-# 出力されたdatabase_idをwrangler.tomlに設定
+# マイグレーション実行（ローカル開発）
+pnpm wrangler d1 execute dev_architect_db --local --file=./migrations/0001_create_specs_table.sql
 
 # APIキーを設定（ローカル開発）
 echo "GOOGLE_GENERATIVE_AI_API_KEY=your-api-key" > .dev.vars
@@ -320,7 +296,7 @@ dev-architect/
 │   ├── index.ts                        # 更新: specルート統合
 │   └── routes/
 │       └── spec.ts                     # 新規: /api/specエンドポイント
-├── wrangler.toml                       # 更新: D1バインディング設定
+├── wrangler.jsonc                      # 更新: D1バインディング設定
 └── .dev.vars                           # 新規: ローカル環境変数
 ```
 
