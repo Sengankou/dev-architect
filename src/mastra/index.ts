@@ -1,4 +1,5 @@
-import { Mastra } from "@mastra/core";
+import { Mastra } from "@mastra/core/mastra";
+import { testAgent } from "./agents/test-agent";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 /**
@@ -22,6 +23,7 @@ const geminiModel = google("gemini-2.5-flash");
 // Mastraアプリケーションインスタンス
 export const mastra = new Mastra({
   // Phase 2以降でエージェント、ワークフロー、ツールを追加
+  agents: { testAgent },
 });
 
 /**
