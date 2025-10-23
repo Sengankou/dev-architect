@@ -7,7 +7,10 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "hono": "^4.10.1"
+    "@mastra/core": "^0.22.2",
+    "hono": "^4.10.1",
+    "mastra": "^0.17.3",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.7",

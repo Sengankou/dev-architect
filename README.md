@@ -104,3 +104,12 @@ npm run deploy
 - テスト駆動開発（NON-NEGOTIABLE）
 - 対話型要件整理
 - Cloudflareアーキテクチャの活用
+- 進捗管理と可視化（NON-NEGOTIABLE）
+
+## 開発進捗管理
+
+開発計画と現在の進捗状況は `PROGRESS.md` を参照してください。
+
+- **開発者**: 作業開始前にPROGRESS.mdで現在のフェーズとタスクを確認
+- **Claude Code**: すべての作業でPROGRESS.mdを参照・更新（憲法で義務化）
+- **更新タイミング**: タスク完了時、フェーズ移行時、計画変更時

@@ -1,9 +1,14 @@
 <!--
   SYNC IMPACT REPORT
   ==================
-  Version Change: 1.0.0 → 1.0.1
+  Version Change: 1.0.1 → 1.1.0
   
-  Changes (v1.0.1):
+  Changes (v1.1.0):
+  - 新原則VII「進捗管理と可視化 (Progress Tracking and Visibility)」を追加
+  - Claude CodeはPROGRESS.mdを常に参照・更新することを義務化
+  - 開発ワークフローに進捗管理ステップを追加
+  
+  Previous Changes (v1.0.1):
   - パフォーマンス目標を緩和（初回応答: 500ms→3秒、対話応答: 2秒→5秒、仕様書生成: 5分→10分）
   - スケール目標を小規模チーム向けに調整（同時接続: 100+→10人、日次生成: 50+→10件）
   - 会話履歴保持をセッション制限から全履歴カバーに変更（コンテキストエンジニアリング前提）
@@ -12,16 +17,17 @@
   - Initial constitution creation for Dev Architect project
   - Added 6 core principles covering Japanese documentation, TDD, interactive requirements,
     tech stack, specification quality, and deployment architecture
-  - Established technology constraints section
-  - Defined development workflow requirements
   
   Templates Requiring Updates:
   ✅ plan-template.md - Constitution Check section aligns with principles
   ✅ spec-template.md - User scenario format supports interactive requirements gathering
   ✅ tasks-template.md - Test-first approach aligns with TDD principle
+  ⚠️ CLAUDE.md - Needs PROGRESS.md reference update
+  ⚠️ README.md - Should reference PROGRESS.md for development workflow
   
   Follow-up TODOs:
-  - None
+  - Update CLAUDE.md to include PROGRESS.md reference requirement
+  - Consider adding PROGRESS.md reference to README.md for developers
 -->
 
 # Dev Architect Constitution
@@ -111,6 +117,24 @@ Cloudflare Workersの特性を活かしたアーキテクチャ設計を行わ�
 高可用性、コスト効率の良いインフラを実現する。アーキテクチャ設計段階から
 プラットフォームの特性を理解し活用することが重要である。
 
+### VII. 進捗管理と可視化 (Progress Tracking and Visibility)
+
+開発作業は常に進捗状況を可視化し、計画的に進めなければならない。
+
+- **PROGRESS.md**: プロジェクト全体の進め方、現在の位置、計画を記載した
+  マスター進捗管理ファイルを維持すること
+- **常時参照**: Claude Codeは作業開始時、タスク切り替え時、完了時に
+  PROGRESS.mdを参照し、現在地を把握すること
+- **常時更新**: タスク完了時、フェーズ移行時、計画変更時にPROGRESS.mdを
+  即座に更新すること
+- **チェックボックス管理**: 完了したタスクは✅、進行中は🚧、未着手は⏳で明示すること
+- **進捗率の明示**: 各フェーズの進捗率（X%）を計算し、表示すること
+
+**根拠**: 複数フェーズにわたる開発では、現在地の把握と計画との照合が不可欠である。
+PROGRESS.mdを単一の信頼できる情報源（Single Source of Truth）とすることで、
+作業の重複や見落としを防ぎ、計画的な開発を実現する。Claude Codeがこのファイルを
+常に参照・更新することで、ユーザーは開発状況を常に把握できる。
+
 ## 技術制約 (Technical Constraints)
 
 ### 必須要件
@@ -137,13 +161,15 @@ Cloudflare Workersの特性を活かしたアーキテクチャ設計を行わ�
 
 ### 機能開発フロー
 
-1. **要件定義**: ユーザーストーリーと受け入れ基準を日本語で作成
-2. **テスト作成**: 受け入れ基準に基づいてテストを作成（失敗することを確認）
-3. **設計**: アーキテクチャとデータモデルを設計（日本語ドキュメント）
-4. **実装**: テストを通すための最小限の実装
-5. **リファクタリング**: コード品質の向上
-6. **ドキュメント**: 実装内容を日本語で文書化
-7. **レビュー**: Constitution準拠を確認
+1. **進捗確認**: PROGRESS.mdを参照し、現在の位置と次のタスクを確認
+2. **要件定義**: ユーザーストーリーと受け入れ基準を日本語で作成
+3. **テスト作成**: 受け入れ基準に基づいてテストを作成（失敗することを確認）
+4. **設計**: アーキテクチャとデータモデルを設計（日本語ドキュメント）
+5. **実装**: テストを通すための最小限の実装
+6. **リファクタリング**: コード品質の向上
+7. **ドキュメント**: 実装内容を日本語で文書化
+8. **進捗更新**: PROGRESS.mdを更新（完了タスクをチェック、進捗率を更新）
+9. **レビュー**: Constitution準拠を確認
 
 ### 品質ゲート
 
@@ -151,6 +177,7 @@ Cloudflare Workersの特性を活かしたアーキテクチャ設計を行わ�
 - 日本語ドキュメントが完備されていること
 - Cloudflare Workers制約を満たしていること
 - 対話的な動作確認が完了していること
+- PROGRESS.mdが最新状態に更新されていること
 
 ### コードレビュー基準
 
@@ -159,6 +186,7 @@ Cloudflare Workersの特性を活かしたアーキテクチャ設計を行わ�
 - 日本語コメント・ドキュメントの確認
 - Cloudflareベストプラクティスの確認
 - セキュリティ考慮事項の確認
+- PROGRESS.md更新の確認
 
 ## Governance
 
@@ -190,7 +218,7 @@ Cloudflare Workersの特性を活かしたアーキテクチャ設計を行わ�
 
 ### ランタイムガイダンス
 
-開発時の詳細なガイダンスは、各テンプレートファイルおよび
-プロジェクトREADME.mdを参照すること。
+開発時の詳細なガイダンスは、各テンプレートファイル、PROGRESS.md、および
+プロジェクトREADME.md、CLAUDE.mdを参照すること。
 
-**Version**: 1.0.1 | **Ratified**: 2025-10-23 | **Last Amended**: 2025-10-23
+**Version**: 1.1.0 | **Ratified**: 2025-10-23 | **Last Amended**: 2025-10-24
