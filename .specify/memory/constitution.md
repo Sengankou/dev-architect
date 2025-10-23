@@ -1,50 +1,199 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+  SYNC IMPACT REPORT
+  ==================
+  Version Change: 1.0.0 → 1.0.1
+  
+  Changes (v1.0.1):
+  - パフォーマンス目標を緩和（初回応答: 500ms→3秒、対話応答: 2秒→5秒、仕様書生成: 5分→10分）
+  - スケール目標を小規模チーム向けに調整（同時接続: 100+→10人、日次生成: 50+→10件）
+  - 会話履歴保持をセッション制限から全履歴カバーに変更（コンテキストエンジニアリング前提）
+  
+  Previous Changes (v1.0.0):
+  - Initial constitution creation for Dev Architect project
+  - Added 6 core principles covering Japanese documentation, TDD, interactive requirements,
+    tech stack, specification quality, and deployment architecture
+  - Established technology constraints section
+  - Defined development workflow requirements
+  
+  Templates Requiring Updates:
+  ✅ plan-template.md - Constitution Check section aligns with principles
+  ✅ spec-template.md - User scenario format supports interactive requirements gathering
+  ✅ tasks-template.md - Test-first approach aligns with TDD principle
+  
+  Follow-up TODOs:
+  - None
+-->
+
+# Dev Architect Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. 日本語ドキュメンテーション (Japanese Documentation) - NON-NEGOTIABLE
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+すべてのドキュメント、仕様書、設計書は日本語で作成しなければならない。
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+- 仕様書（spec.md）は日本語で記述すること
+- 設計ドキュメント（plan.md, data-model.md）は日本語で記述すること
+- タスクリスト（tasks.md）は日本語で記述すること
+- コード内のコメントは日本語で記述すること
+- ユーザー向けドキュメント（README.md, quickstart.md）は日本語で記述すること
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**根拠**: このプロジェクトの主な利用者は日本のAIスタートアップのエンジニアリングマネージャーであり、
+要件整理と仕様書作成の効率化が目的である。母国語でのコミュニケーションにより、誤解を防ぎ、
+より正確な要件定義と仕様書作成が可能となる。
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### II. テスト駆動開発 (Test-Driven Development) - NON-NEGOTIABLE
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+すべての機能開発はTDDサイクルに従わなければならない。
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+- テストを先に書くこと（Test First）
+- テストが失敗することを確認すること（Red）
+- 実装してテストを通すこと（Green）
+- リファクタリングすること（Refactor）
+- 実装前にテストが存在しない場合、実装を開始してはならない
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+**根拠**: 要件定義支援エージェントとして、生成する仕様書の品質が重要である。
+TDDにより、要件の漏れや矛盾を早期に発見し、高品質な仕様書を生成できる。
+また、エージェント自体の動作保証にも不可欠である。
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### III. 対話型要件整理 (Interactive Requirements Gathering)
+
+エージェントはユーザーと対話的にやり取りし、要件を段階的に明確化しなければならない。
+
+- チャットベースで要件をヒアリングすること
+- 不明瞭な点は必ず質問して確認すること
+- 要件の抜け漏れを防ぐため、体系的な質問フローを持つこと
+- ユーザーの回答を構造化し、仕様書に反映すること
+- 将来的には音声入力にも対応できる設計とすること
+
+**根拠**: プロジェクトの成功基準は「アーキテクチャ設計や仕様書作成に必要十分な情報を
+インタラクティブに聞き出し、ほとんど手直しの必要のないモノを提出できる」ことである。
+対話的アプローチにより、重要な情報の見落としを防ぎ、高品質な成果物を生成できる。
+
+### IV. 技術スタック標準 (Technology Stack Standards)
+
+プロジェクトで使用する技術スタックは以下に統一しなければならない。
+
+- **エージェントフレームワーク**: Mastra
+- **デプロイメント**: Cloudflare Workers
+- **Webフレームワーク**: Hono
+- **リンター・フォーマッター**: Biome
+- 新しい技術の導入は、既存スタックとの整合性を評価した上で判断すること
+
+**根拠**: 技術スタックを統一することで、開発効率の向上、デプロイの簡素化、
+メンテナンスコストの削減を実現する。Cloudflareでのデプロイを前提とすることで、
+スケーラビリティとパフォーマンスを確保する。
+
+### V. 仕様書品質保証 (Specification Quality Assurance)
+
+生成する仕様書は、最小限の手直しで使用可能な品質でなければならない。
+
+- システムアーキテクチャは、技術的に実現可能で矛盾のないものであること
+- UI/UX設計は、ユーザーストーリーと整合性が取れていること
+- 要件は具体的で、測定可能な形で記述されていること
+- エッジケースや制約条件が適切に文書化されていること
+- 対話的なフィードバックループにより、継続的に品質を改善すること
+
+**根拠**: プロジェクトの失敗条件は「対話的に話を整理する中で、重要な情報を見落とし、
+大量の手直しが必要な成果物を提出してしまう」ことである。高品質な仕様書を生成することで、
+下流工程での手戻りを最小化し、開発効率を最大化する。
+
+### VI. Cloudflareアーキテクチャ (Cloudflare Architecture)
+
+Cloudflare Workersの特性を活かしたアーキテクチャ設計を行わなければならない。
+
+- エッジコンピューティングの利点を活用すること
+- Cloudflare Workersの制約（実行時間、メモリ、Cold Start等）を考慮すること
+- Honoフレームワークのベストプラクティスに従うこと
+- Cloudflare Bindingsを適切に使用すること（KV, Durable Objects, R2等）
+- スケーラビリティとパフォーマンスを設計段階から考慮すること
+
+**根拠**: Cloudflare Workersでのデプロイを前提とすることで、グローバルな低レイテンシー、
+高可用性、コスト効率の良いインフラを実現する。アーキテクチャ設計段階から
+プラットフォームの特性を理解し活用することが重要である。
+
+## 技術制約 (Technical Constraints)
+
+### 必須要件
+
+- **言語**: TypeScript（型安全性の確保）
+- **ランタイム**: Cloudflare Workers
+- **フレームワーク**: Hono（Cloudflare Workers最適化済み）
+- **エージェント**: Mastra（LLMエージェント開発）
+- **品質管理**: Biome（リンター・フォーマッター）
+
+### パフォーマンス目標
+
+- 初回応答時間: 3秒以内（Cold Start含む）
+- 対話的な応答: 5秒以内
+- 仕様書生成時間: 10分以内（中規模プロジェクト）
+
+### スケール目標
+
+- 同時接続ユーザー: 10人程度（小規模チーム想定）
+- 1日あたりの仕様書生成: 10件程度
+- エージェントの会話履歴保持: 全会話履歴を常にカバー（コンテキストエンジニアリングにより
+  適切な情報量で文脈を維持し、会話の最初から最新までの全体的な流れを把握できること）
+
+## 開発ワークフロー (Development Workflow)
+
+### 機能開発フロー
+
+1. **要件定義**: ユーザーストーリーと受け入れ基準を日本語で作成
+2. **テスト作成**: 受け入れ基準に基づいてテストを作成（失敗することを確認）
+3. **設計**: アーキテクチャとデータモデルを設計（日本語ドキュメント）
+4. **実装**: テストを通すための最小限の実装
+5. **リファクタリング**: コード品質の向上
+6. **ドキュメント**: 実装内容を日本語で文書化
+7. **レビュー**: Constitution準拠を確認
+
+### 品質ゲート
+
+- すべてのテストが成功していること
+- Biomeによるリンター・フォーマッターチェックが通ること
+- 日本語ドキュメントが完備されていること
+- Cloudflare Workers制約を満たしていること
+- 対話的な動作確認が完了していること
+
+### コードレビュー基準
+
+- Constitution準拠の確認
+- テストカバレッジの確認
+- 日本語コメント・ドキュメントの確認
+- Cloudflareベストプラクティスの確認
+- セキュリティ考慮事項の確認
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+### 憲法の位置づけ
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+この憲法はすべての開発実践に優先する。憲法に反する実装、設計、ドキュメントは
+受け入れられない。
+
+### 改訂手続き
+
+憲法の改訂には以下が必要である:
+
+1. 改訂提案の文書化（改訂理由、影響範囲、移行計画）
+2. プロジェクトメンバーの承認
+3. 依存する全テンプレートとドキュメントの更新
+4. セマンティックバージョニングに基づくバージョン更新
+
+### バージョニングポリシー
+
+- **MAJOR**: 原則の削除または後方互換性のない変更
+- **MINOR**: 新しい原則の追加または既存原則の大幅な拡張
+- **PATCH**: 明確化、文言修正、非意味的な改良
+
+### コンプライアンスレビュー
+
+- すべてのPRはConstitution準拠を検証すること
+- 複雑性の導入は正当化が必要
+- 原則違反は明示的に文書化し、承認を得ること
+
+### ランタイムガイダンス
+
+開発時の詳細なガイダンスは、各テンプレートファイルおよび
+プロジェクトREADME.mdを参照すること。
+
+**Version**: 1.0.1 | **Ratified**: 2025-10-23 | **Last Amended**: 2025-10-23
