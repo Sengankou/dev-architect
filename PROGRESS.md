@@ -23,27 +23,9 @@
 | ✅ | Phase 1-1 | mastraとその依存を追加 | `pnpm add mastra @mastra/core @ai-sdk/google zod` 完了 |
 | ✅ | Phase 1-2 | mastra.config.ts作成 | Gemini 2.5 Flash設定完了 |
 | ✅ | Phase 1-3 | generateSpecワークフロー作成 | Mastra公式構造に従い`src/mastra/`配下に実装完了 |
-| 🚧 | Phase 1-4 | /api/specエンドポイント実装 | **← 今ココ** 仕様明確化完了、実装準備OK |
+| 🚧 | Phase 1-4 | /api/specエンドポイント実装 | **← 今ココ** 仕様明確化完了（`specs/001-phase1-4-api-spec/spec.md`参照）、実装準備OK |
 | ⏳ | Phase 1-5 | KV/D1バインディング統合 | session仮保存、結果永続化、スキーマ作成 |
 | ⏳ | Phase 1-6 | 動作確認テスト | curl/wrangler dev経由でPOST→仕様書草稿確認 |
-
-### Phase 1-4 仕様明確化結果（2025-10-24）
-
-**API仕様**:
-- エンドポイント: `POST /api/spec`
-- リクエスト: `{ "requirements": "string", "projectName": "string?" }`
-- 成功レスポンス: `{ "analysis": {}, "architecture": {}, "specificationDraft": "string" }`
-- エラーレスポンス: `{ "error": { "message": "string", "code": "string" } }`
-- タイムアウト: 60秒
-
-**D1スキーマ（specsテーブル）**:
-- `id` (INTEGER PRIMARY KEY)
-- `requirements` (TEXT NOT NULL)
-- `project_name` (TEXT)
-- `analysis_json` (TEXT NOT NULL)
-- `architecture_json` (TEXT NOT NULL)
-- `spec_draft` (TEXT NOT NULL)
-- `created_at` (INTEGER NOT NULL)
 
 ### Phase 1 完了条件
 
