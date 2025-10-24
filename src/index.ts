@@ -1,14 +1,22 @@
 import { Hono } from "hono";
+import spec from "./routes/spec";
+import { errorHandler } from "./middleware/error-handler";
 
 // Cloudflare Wrangler が自動生成した型を利用
 // Env 型は worker-configuration.d.ts から global に解決される
 
 const app = new Hono<{ Bindings: Env }>();
 
+// グローバルエラーハンドラを登録
+app.onError(errorHandler);
+
 // APIルート
 app.get("/api", (c) =>
   c.json({ message: "dev-architect API running", version: "1.0.0" }),
 );
+
+// 仕様書生成APIを登録
+app.route("/api/spec", spec);
 
 // public/index.htmlから呼ばれるエンドポイント
 app.get("/message", (c) => c.text("Dev Architect - 要件定義支援エージェント"));

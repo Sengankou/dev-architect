@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^2.0.23",
+    "@hono/zod-validator": "^0.7.4",
     "@mastra/core": "^0.22.2",
     "ai": "^5.0.77",
     "hono": "^4.10.1",
@@ -18,7 +19,9 @@
     "@biomejs/biome": "^2.2.7",
     "@cloudflare/vitest-pool-workers": "^0.10.0",
     "@types/node": "^24.9.1",
-    "vitest": "^4.0.2",
+    "@vitest/runner": "3.2.3",
+    "@vitest/snapshot": "3.2.3",
+    "vitest": "^3.2.3",
     "wrangler": "^4.43.0"
   }
 }
