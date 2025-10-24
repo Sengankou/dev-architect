@@ -21,14 +21,14 @@
 
 **目的**: プロジェクト初期化と基盤構造の構築
 
-- [ ] T001 Vitestと@cloudflare/vitest-pool-workersをインストール（pnpm add -D vitest @cloudflare/vitest-pool-workers）
-- [ ] T002 vitest.config.tsを作成（research.mdのVitest設定を適用、readD1Migrations()でmigrations/ディレクトリを指定、miniflare設定でd1_databases: ['dev_architect_db']を含める）
-- [ ] T003 [P] test/setup.tsを作成（D1マイグレーション自動適用）
-- [ ] T004 [P] migrations/0001_create_specs_table.sqlを作成（data-model.mdのスキーマ適用）
-- [ ] T005 D1マイグレーションをローカル環境に適用（wrangler d1 migrations apply dev_architect_db --local）
-- [ ] T006 [P] src/types/entities.tsを作成（SpecRow, Analysis, Architecture, Spec型定義）
-- [ ] T007 [P] src/types/request.tsを作成（SpecRequest型定義）
-- [ ] T008 [P] src/types/response.tsを作成（SpecResponse, ErrorResponse型定義）
+- [x] T001 Vitestと@cloudflare/vitest-pool-workersをインストール（pnpm add -D vitest @cloudflare/vitest-pool-workers）
+- [x] T002 vitest.config.tsを作成（research.mdのVitest設定を適用、readD1Migrations()でmigrations/ディレクトリを指定、miniflare設定でd1_databases: ['dev_architect_db']を含める）
+- [x] T003 [P] test/setup.tsを作成（D1マイグレーション自動適用）
+- [x] T004 [P] migrations/0001_create_specs_table.sqlを作成（data-model.mdのスキーマ適用）
+- [x] T005 D1マイグレーションをローカル環境に適用（wrangler d1 migrations apply dev_architect_db --local）
+- [x] T006 [P] src/types/entities.tsを作成（SpecRow, Analysis, Architecture, Spec型定義）
+- [x] T007 [P] src/types/request.tsを作成（SpecRequest型定義）
+- [x] T008 [P] src/types/response.tsを作成（SpecResponse, ErrorResponse型定義）
 
 **Checkpoint**: 基盤準備完了 - User Story実装が開始可能
 
@@ -40,12 +40,12 @@
 
 **⚠️ CRITICAL**: Phase 2完了まで、どのUser Story作業も開始できない
 
-- [ ] T009 src/middleware/error-handler.tsを作成（app.onError()でHTTPException/ZodError/TimeoutErrorを捕捉し、ErrorResponse型のJSON（{error: {message, code}}）を返す。research.mdの実装例を参照）
-- [ ] T010 [P] src/middleware/payload-size-check.tsを作成（bodyLimit 100KB制限、research.md参照）
-- [ ] T011 [P] src/middleware/timeout.tsを作成（60秒タイムアウト、research.md参照）
-- [ ] T012 [P] src/utils/logger.tsを作成（Console APIラッパー、エラーログ用）
-- [ ] T013 [P] src/utils/validation.tsを作成（zodスキーマ定義とバリデーションヘルパー）
-- [ ] T014 src/repositories/spec-repository.tsを作成（SpecRepositoryクラス、data-model.md参照）
+- [x] T009 src/middleware/error-handler.tsを作成（app.onError()でHTTPException/ZodError/TimeoutErrorを捕捉し、ErrorResponse型のJSON（{error: {message, code}}）を返す。research.mdの実装例を参照）
+- [x] T010 [P] src/middleware/payload-size-check.tsを作成（bodyLimit 100KB制限、research.md参照）
+- [x] T011 [P] src/middleware/timeout.tsを作成（60秒タイムアウト、research.md参照）
+- [x] T012 [P] src/utils/logger.tsを作成（Console APIラッパー、エラーログ用）
+- [x] T013 [P] src/utils/validation.tsを作成（zodスキーマ定義とバリデーションヘルパー）
+- [x] T014 src/repositories/spec-repository.tsを作成（SpecRepositoryクラス、data-model.md参照）
 
 **Checkpoint**: 基盤完成 - User Story実装が並列実行可能
 
