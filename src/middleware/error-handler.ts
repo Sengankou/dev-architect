@@ -1,7 +1,7 @@
-import type { Context } from 'hono'
-import { HTTPException } from 'hono/http-exception'
-import { ZodError } from 'zod'
-import type { ErrorResponse } from '../types/response'
+import type { Context } from "hono";
+import { HTTPException } from "hono/http-exception";
+import { ZodError } from "zod";
+import type { ErrorResponse } from "../types/response";
 
 /**
  * グローバルエラーハンドラー
@@ -14,45 +14,57 @@ import type { ErrorResponse } from '../types/response'
  * @returns ErrorResponse型のJSONレスポンス
  */
 export function errorHandler(err: Error, c: Context) {
-  console.error('Error:', err)
+  console.error("Error:", err);
 
   // HTTPException: Honoの標準エラー（400, 413, 504など）
   if (err instanceof HTTPException) {
-    return c.json<ErrorResponse>({
-      error: {
-        message: err.message,
-        code: getErrorCode(err.status),
+    return c.json<ErrorResponse>(
+      {
+        error: {
+          message: err.message,
+          code: getErrorCode(err.status),
+        },
       },
-    }, err.status)
+      err.status,
+    );
   }
 
   // ZodError: バリデーションエラー
   if (err instanceof ZodError) {
-    return c.json<ErrorResponse>({
-      error: {
-        message: 'Validation failed',
-        code: 'INVALID_REQUEST',
+    return c.json<ErrorResponse>(
+      {
+        error: {
+          message: "Validation failed",
+          code: "INVALID_REQUEST",
+        },
       },
-    }, 400)
+      400,
+    );
   }
 
   // TimeoutError: タイムアウト
-  if (err.name === 'TimeoutError') {
-    return c.json<ErrorResponse>({
-      error: {
-        message: 'Request timeout',
-        code: 'TIMEOUT',
+  if (err.name === "TimeoutError") {
+    return c.json<ErrorResponse>(
+      {
+        error: {
+          message: "Request timeout",
+          code: "TIMEOUT",
+        },
       },
-    }, 504)
+      504,
+    );
   }
 
   // その他のエラー: 内部サーバーエラー
-  return c.json<ErrorResponse>({
-    error: {
-      message: err instanceof Error ? err.message : 'Internal server error',
-      code: 'INTERNAL_ERROR',
+  return c.json<ErrorResponse>(
+    {
+      error: {
+        message: err instanceof Error ? err.message : "Internal server error",
+        code: "INTERNAL_ERROR",
+      },
     },
-  }, 500)
+    500,
+  );
 }
 
 /**
@@ -61,12 +73,12 @@ export function errorHandler(err: Error, c: Context) {
  * @param status - HTTPステータスコード
  * @returns エラーコード文字列
  */
-function getErrorCode(status: number): string {
-  const codes: Record<number, string> = {
-    400: 'INVALID_REQUEST',
-    413: 'PAYLOAD_TOO_LARGE',
-    500: 'INTERNAL_ERROR',
-    504: 'TIMEOUT',
-  }
-  return codes[status] || 'UNKNOWN_ERROR'
+function getErrorCode(status: number): ErrorResponse["error"]["code"] {
+  const codes: Record<number, ErrorResponse["error"]["code"]> = {
+    400: "INVALID_REQUEST",
+    413: "PAYLOAD_TOO_LARGE",
+    500: "INTERNAL_ERROR",
+    504: "TIMEOUT",
+  };
+  return codes[status] || "INTERNAL_ERROR";
 }
