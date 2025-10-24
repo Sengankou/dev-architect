@@ -1,5 +1,6 @@
-import { bodyLimit } from 'hono/body-limit'
-import type { MiddlewareHandler } from 'hono'
+import { bodyLimit } from "hono/body-limit";
+import { HTTPException } from "hono/http-exception";
+import type { MiddlewareHandler } from "hono";
 
 /**
  * ペイロードサイズチェックミドルウェア
@@ -9,19 +10,16 @@ import type { MiddlewareHandler } from 'hono'
  *
  * 理由: Cloudflare Workersのメモリ制約（128MB）を考慮し、
  * 一般的な要件テキストを十分カバーしつつリソース消費を最適化するため。
+ *
+ * エラーはHTTPExceptionとしてthrowされ、app.onError()のグローバルエラーハンドラで
+ * 統一的に処理されます。
  */
 export const payloadSizeCheck: MiddlewareHandler = bodyLimit({
   maxSize: 100 * 1024, // 100KB
   onError: (c) => {
-    // 413エラーとErrorResponse型準拠のJSONを返す
-    return c.json(
-      {
-        error: {
-          message: 'Request body too large',
-          code: 'PAYLOAD_TOO_LARGE'
-        }
-      },
-      413
-    )
+    // HTTPExceptionをthrowしてグローバルエラーハンドラに処理を委譲
+    throw new HTTPException(413, {
+      message: "Request body too large",
+    });
   },
-})
+});
