@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import spec from "./routes/spec";
+import chat from "./routes/chat";
 import { errorHandler } from "./middleware/error-handler";
 
 // Cloudflare Wrangler が自動生成した型を利用
@@ -17,6 +18,9 @@ app.get("/api", (c) =>
 
 // 仕様書生成APIを登録
 app.route("/api/spec", spec);
+
+// チャットAPIを登録
+app.route("/api/chat", chat);
 
 // public/index.htmlから呼ばれるエンドポイント
 app.get("/message", (c) => c.text("Dev Architect - 要件定義支援エージェント"));
