@@ -1,5 +1,5 @@
 import { google } from "@ai-sdk/google";
-import { Agent } from "@mastra/core";
+import { Agent } from "@mastra/core/agent";
 
 export const testAgent = new Agent({
   name: "test-agent",

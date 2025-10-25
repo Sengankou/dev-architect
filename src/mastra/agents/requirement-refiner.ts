@@ -5,7 +5,7 @@
  * Phase 2: 対話フロー + セッション管理
  */
 
-import { Agent } from "@mastra/core";
+import { Agent } from "@mastra/core/agent";
 
 export const requirementRefinerAgent = new Agent({
   name: "requirement-refiner",
