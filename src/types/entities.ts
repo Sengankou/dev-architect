@@ -20,23 +20,29 @@ export type SpecRow = {
 /**
  * AI分析結果の構造
  *
- * Mastra generateSpecワークフローの出力形式に対応
+ * specs/001-phase1-4-api-spec/data-model.md の正式仕様に準拠
  */
 export type Analysis = {
-  mainPurpose: string;
-  targetUsers: string;
-  keyFeatures: string[];
+  summary: string;
+  keyPoints: string[];
+  actors: string[];
+  mainFeatures: string[];
 };
 
 /**
  * アーキテクチャ提案の構造
  *
- * Mastra generateSpecワークフローの出力形式に対応
+ * specs/001-phase1-4-api-spec/data-model.md の正式仕様に準拠
  */
 export type Architecture = {
-  techStack: string[];
-  deployment: string;
-  scalability: string;
+  overview: string;
+  components: Array<{
+    name: string;
+    description: string;
+    responsibilities: string[];
+  }>;
+  dataFlow: string;
+  technologies: string[];
 };
 
 /**

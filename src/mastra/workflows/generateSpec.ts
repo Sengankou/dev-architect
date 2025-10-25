@@ -19,19 +19,35 @@ export const GenerateSpecInput = z.object({
   projectName: z.string().optional().describe("プロジェクト名（オプション）"),
 });
 
-// 出力スキーマ
+// 出力スキーマ（specs/001-phase1-4-api-spec/data-model.md に準拠）
 export const GenerateSpecOutput = z.object({
   analysis: z.object({
-    mainPurpose: z.string().describe("主要な目的"),
-    targetUsers: z.string().describe("対象ユーザー層"),
-    keyFeatures: z.array(z.string()).describe("主要機能リスト"),
+    summary: z.string().describe("要件の概要"),
+    keyPoints: z.array(z.string()).describe("重要なポイント"),
+    actors: z
+      .array(z.string())
+      .describe("システムに関わるアクター（ユーザー、管理者など）"),
+    mainFeatures: z.array(z.string()).describe("主要機能リスト"),
   }),
   architecture: z.object({
-    techStack: z.array(z.string()).describe("技術スタック"),
-    deployment: z.string().describe("デプロイメント方法"),
-    scalability: z.string().describe("スケーラビリティ考慮事項"),
+    overview: z.string().describe("アーキテクチャの全体像"),
+    components: z
+      .array(
+        z.object({
+          name: z.string().describe("コンポーネント名"),
+          description: z.string().describe("コンポーネントの説明"),
+          responsibilities: z
+            .array(z.string())
+            .describe("コンポーネントの責務"),
+        }),
+      )
+      .describe("システムコンポーネント"),
+    dataFlow: z.string().describe("データフローの説明"),
+    technologies: z.array(z.string()).describe("使用技術リスト"),
   }),
-  specificationDraft: z.string().describe("生成された仕様書草稿（Markdown形式）"),
+  specificationDraft: z
+    .string()
+    .describe("生成された仕様書草稿（Markdown形式）"),
 });
 
 export type GenerateSpecInputType = z.infer<typeof GenerateSpecInput>;
@@ -59,9 +75,10 @@ ${requirements}
 
 以下の形式でJSON出力してください（他のテキストは含めず、JSONのみ）：
 {
-  "mainPurpose": "このシステムの主要な目的",
-  "targetUsers": "対象ユーザー層",
-  "keyFeatures": ["機能1", "機能2", "機能3"]
+  "summary": "要件全体の概要（1-2文）",
+  "keyPoints": ["重要なポイント1", "重要なポイント2", "重要なポイント3"],
+  "actors": ["エンドユーザー", "管理者", "システム"],
+  "mainFeatures": ["機能1", "機能2", "機能3"]
 }
 `;
 
@@ -79,9 +96,10 @@ ${requirements}
   } catch (error) {
     console.warn("[generateSpec] JSON解析失敗、フォールバック使用", error);
     analysis = {
-      mainPurpose: requirements,
-      targetUsers: "未指定",
-      keyFeatures: ["要件の詳細化が必要"],
+      summary: requirements,
+      keyPoints: ["要件の詳細化が必要"],
+      actors: ["ユーザー"],
+      mainFeatures: ["要件の詳細化が必要"],
     };
   }
 
@@ -91,9 +109,10 @@ ${requirements}
 あなたは経験豊富なシステムアーキテクトです。
 以下の要件分析結果に基づいて、最適なシステムアーキテクチャを提案してください。
 
-主要目的: ${analysis.mainPurpose}
-対象ユーザー: ${analysis.targetUsers}
-主要機能: ${analysis.keyFeatures.join(", ")}
+要件概要: ${analysis.summary}
+重要ポイント: ${analysis.keyPoints.join(", ")}
+アクター: ${analysis.actors.join(", ")}
+主要機能: ${analysis.mainFeatures.join(", ")}
 
 プロジェクト標準技術スタック:
 - バックエンド: Cloudflare Workers + Hono
@@ -102,14 +121,21 @@ ${requirements}
 
 以下の形式でJSON出力してください（他のテキストは含めず、JSONのみ）：
 {
-  "techStack": ["技術1", "技術2", "技術3"],
-  "deployment": "デプロイメント方法の説明",
-  "scalability": "スケーラビリティに関する考慮事項"
+  "overview": "アーキテクチャの全体像（2-3文）",
+  "components": [
+    {
+      "name": "コンポーネント名",
+      "description": "コンポーネントの説明",
+      "responsibilities": ["責務1", "責務2"]
+    }
+  ],
+  "dataFlow": "データフローの説明（リクエストから応答まで）",
+  "technologies": ["Cloudflare Workers", "Hono", "TypeScript", "Mastra"]
 }
 `;
 
   const architectureResponse = await generateWithLLM(architecturePrompt, {
-    maxTokens: 1500,
+    maxTokens: 2000,
     temperature: 0.5,
   });
 
@@ -121,9 +147,21 @@ ${requirements}
   } catch (error) {
     console.warn("[generateSpec] JSON解析失敗、フォールバック使用", error);
     architecture = {
-      techStack: ["Cloudflare Workers", "Hono", "TypeScript", "Mastra"],
-      deployment: "Cloudflare Workersへのデプロイ",
-      scalability: "エッジコンピューティングによる自動スケーリング",
+      overview: "Cloudflare Workersをベースとしたサーバーレスアーキテクチャ",
+      components: [
+        {
+          name: "API Layer",
+          description: "Honoフレームワークによるルーティングとリクエスト処理",
+          responsibilities: [
+            "リクエストバリデーション",
+            "レスポンス生成",
+            "エラーハンドリング",
+          ],
+        },
+      ],
+      dataFlow:
+        "クライアント → Cloudflare Workers → D1データベース → レスポンス",
+      technologies: ["Cloudflare Workers", "Hono", "TypeScript", "Mastra"],
     };
   }
 
@@ -136,23 +174,25 @@ ${requirements}
 プロジェクト名: ${projectName || "未定"}
 
 ## 要件分析結果
-- 主要目的: ${analysis.mainPurpose}
-- 対象ユーザー: ${analysis.targetUsers}
-- 主要機能: ${analysis.keyFeatures.join(", ")}
+- 概要: ${analysis.summary}
+- 重要ポイント: ${analysis.keyPoints.join(", ")}
+- アクター: ${analysis.actors.join(", ")}
+- 主要機能: ${analysis.mainFeatures.join(", ")}
 
-## システム構成
-- 技術スタック: ${architecture.techStack.join(", ")}
-- デプロイメント: ${architecture.deployment}
-- スケーラビリティ: ${architecture.scalability}
+## システムアーキテクチャ
+- 全体像: ${architecture.overview}
+- コンポーネント: ${architecture.components.map((c: { name: string }) => c.name).join(", ")}
+- データフロー: ${architecture.dataFlow}
+- 使用技術: ${architecture.technologies.join(", ")}
 
 以下のセクションを含むMarkdown形式の仕様書を作成してください：
 1. プロジェクト概要
-2. 対象ユーザーとユースケース
+2. システムに関わるアクター
 3. 主要機能
 4. システムアーキテクチャ
-5. 技術スタック
-6. デプロイメント戦略
-7. スケーラビリティとパフォーマンス
+5. コンポーネント詳細
+6. データフロー
+7. 技術スタック
 
 すべて日本語で記述してください。
 Markdown形式で出力してください（コードブロックで囲まずに直接出力）。

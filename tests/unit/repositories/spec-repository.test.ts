@@ -22,15 +22,23 @@ describe("SpecRepository", () => {
   describe("create", () => {
     it("should insert a new spec and return the ID", async () => {
       const analysis: Analysis = {
-        mainPurpose: "テスト分析の主目的",
-        targetUsers: "エンジニアリングマネージャー",
-        keyFeatures: ["機能1", "機能2"],
+        summary: "テスト分析の概要",
+        keyPoints: ["重要ポイント1", "重要ポイント2"],
+        actors: ["エンジニアリングマネージャー", "開発者"],
+        mainFeatures: ["機能1", "機能2"],
       };
 
       const architecture: Architecture = {
-        techStack: ["TypeScript", "Cloudflare Workers", "Hono"],
-        deployment: "Cloudflare Workers",
-        scalability: "エッジコンピューティングによる自動スケール",
+        overview: "Cloudflare Workersをベースとしたアーキテクチャ",
+        components: [
+          {
+            name: "API Layer",
+            description: "Honoによるルーティング",
+            responsibilities: ["リクエスト処理", "バリデーション"],
+          },
+        ],
+        dataFlow: "クライアント → API → D1 → レスポンス",
+        technologies: ["TypeScript", "Cloudflare Workers", "Hono"],
       };
 
       const id = await repository.create({
@@ -46,15 +54,17 @@ describe("SpecRepository", () => {
 
     it("should handle null projectName", async () => {
       const analysis: Analysis = {
-        mainPurpose: "テスト分析",
-        targetUsers: "テストユーザー",
-        keyFeatures: [],
+        summary: "テスト分析",
+        keyPoints: [],
+        actors: ["テストユーザー"],
+        mainFeatures: [],
       };
 
       const architecture: Architecture = {
-        techStack: [],
-        deployment: "テスト環境",
-        scalability: "小規模",
+        overview: "テスト環境",
+        components: [],
+        dataFlow: "シンプルなデータフロー",
+        technologies: [],
       };
 
       const id = await repository.create({
@@ -72,15 +82,23 @@ describe("SpecRepository", () => {
   describe("findById", () => {
     it("should return spec when found", async () => {
       const analysis: Analysis = {
-        mainPurpose: "テスト分析",
-        targetUsers: "エンジニア",
-        keyFeatures: ["機能1"],
+        summary: "テスト分析",
+        keyPoints: ["ポイント1"],
+        actors: ["エンジニア"],
+        mainFeatures: ["機能1"],
       };
 
       const architecture: Architecture = {
-        techStack: ["TypeScript"],
-        deployment: "Cloudflare Workers",
-        scalability: "自動スケール",
+        overview: "テストアーキテクチャ",
+        components: [
+          {
+            name: "Test Component",
+            description: "テスト用コンポーネント",
+            responsibilities: ["テスト実行"],
+          },
+        ],
+        dataFlow: "テストデータフロー",
+        technologies: ["TypeScript"],
       };
 
       const id = await repository.create({
@@ -96,7 +114,7 @@ describe("SpecRepository", () => {
       expect(spec).toBeDefined();
       expect(spec?.requirements).toBe("テスト要件");
       expect(spec?.projectName).toBe("TestProject");
-      expect(spec?.analysis.mainPurpose).toBe("テスト分析");
+      expect(spec?.analysis.summary).toBe("テスト分析");
     });
 
     it("should return null when not found", async () => {
@@ -109,14 +127,16 @@ describe("SpecRepository", () => {
     it("should return specs in descending order by created_at", async () => {
       // 複数のspecを作成
       const analysis: Analysis = {
-        mainPurpose: "テスト",
-        targetUsers: "テストユーザー",
-        keyFeatures: [],
+        summary: "テスト",
+        keyPoints: [],
+        actors: ["テストユーザー"],
+        mainFeatures: [],
       };
       const architecture: Architecture = {
-        techStack: [],
-        deployment: "テスト",
-        scalability: "小規模",
+        overview: "テスト",
+        components: [],
+        dataFlow: "テストフロー",
+        technologies: [],
       };
 
       await repository.create({
