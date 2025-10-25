@@ -12,7 +12,7 @@ export default defineWorkersConfig(async () => {
   return {
     test: {
       globals: true,
-      setupFiles: ["./test/setup.ts"],
+      setupFiles: ["./tests/setup.ts"],
       poolOptions: {
         workers: {
           singleWorker: true,
