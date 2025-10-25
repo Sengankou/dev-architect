@@ -4,9 +4,9 @@ import chat from "./routes/chat";
 import { errorHandler } from "./middleware/error-handler";
 
 // Cloudflare Wrangler が自動生成した型を利用
-// Env 型は worker-configuration.d.ts から global に解決される
+// Env 型は worker-configuration.d.ts の Cloudflare 名前空間から解決される
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Cloudflare.Env }>();
 
 // グローバルエラーハンドラを登録
 app.onError(errorHandler);
