@@ -1,0 +1,340 @@
+openapi: 3.1.0
+info:
+  title: Dev Architect - Chat API
+  version: 2.0.0
+  description: |
+    Phase 2: 対話フロー + セッション管理
+
+    ユーザーとAIのマルチターン会話を実現し、要件を対話的に精緻化するAPIです。
+    Phase 1の`/api/spec`エンドポイントは後方互換性のため継続提供されます。
+
+    **主要機能**:
+    - POST /api/chat: マルチターン会話（セッションIDで履歴保持）
+    - GET /api/chat/:sessionId/history: 会話履歴取得
+
+    **認証**: Phase 2では未実装（匿名セッション、localStorageでセッションID管理）
+
+servers:
+  - url: http://localhost:8787
+    description: ローカル開発環境
+  - url: https://dev-architect.example.com
+    description: 本番環境（Cloudflare Workers）
+
+tags:
+  - name: Chat
+    description: 対話フロー関連エンドポイント
+
+paths:
+  /api/chat:
+    post:
+      summary: メッセージ送信（マルチターン会話）
+      description: |
+        ユーザーメッセージを送信し、AIの応答を取得します。
+
+        **新規セッション**: `sessionId`を指定しない場合、新しいセッションが作成されます。
+        **既存セッション**: `sessionId`を指定すると、過去の会話履歴を踏まえたAI応答が返されます。
+
+        **パフォーマンス目標**:
+        - 初回メッセージ: 5秒以内（SC-001）
+        - 対話応答: 5秒以内（SC-002）
+        - セッション再開: 8秒以内（SC-003）
+      operationId: sendMessage
+      tags:
+        - Chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            examples:
+              newSession:
+                summary: 新規セッション作成
+                value:
+                  message: "ECサイトのカート機能を実装したいです。商品を追加・削除・数量変更できるようにしたいです。"
+              existingSession:
+                summary: 既存セッション継続
+                value:
+                  sessionId: "550e8400-e29b-41d4-a716-446655440000"
+                  message: "はい、在庫管理も必要です。在庫数をリアルタイムで確認できるようにしたいです。"
+      responses:
+        '200':
+          description: メッセージ送信成功、AI応答を返却
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              examples:
+                newSessionResponse:
+                  summary: 新規セッション作成時の応答
+                  value:
+                    sessionId: "550e8400-e29b-41d4-a716-446655440000"
+                    response: "カート機能の実装について詳しく教えていただきありがとうございます。いくつか確認させてください。\n\n1. 在庫管理は必要ですか？（在庫切れの商品をカートに追加できないようにする）\n2. ゲストユーザー（非ログイン）でもカート機能を使用できるようにしますか？\n3. カート内の商品は何日間保持する予定ですか？"
+                existingSessionResponse:
+                  summary: 既存セッション継続時の応答
+                  value:
+                    sessionId: "550e8400-e29b-41d4-a716-446655440000"
+                    response: "在庫管理機能も追加するのですね。承知しました。\n\nリアルタイム在庫確認について、以下の点を確認させてください：\n\n1. 在庫数の更新頻度はどのくらいですか？（リアルタイム、数分ごと、日次等）\n2. 複数ユーザーが同時に同じ商品をカートに追加した場合、在庫数をどう処理しますか？\n3. 在庫切れ時の代替商品提案機能は必要ですか？"
+        '400':
+          description: リクエストボディのバリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                messageRequired:
+                  summary: メッセージ必須エラー
+                  value:
+                    error: "message is required"
+                    details: "リクエストボディに'message'フィールドが必要です"
+                messageTooLarge:
+                  summary: メッセージサイズ超過エラー
+                  value:
+                    error: "message too large"
+                    details: "メッセージは100KB以下である必要があります"
+                invalidControlCharacters:
+                  summary: 不正な制御文字エラー
+                  value:
+                    error: "invalid content"
+                    details: "メッセージに不正な制御文字が含まれています"
+        '404':
+          description: セッションIDが存在しない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                sessionNotFound:
+                  summary: セッション未発見
+                  value:
+                    error: "session not found"
+                    details: "指定されたセッションIDは存在しません"
+        '429':
+          description: レート制限超過
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rateLimitExceeded:
+                  summary: レート制限超過
+                  value:
+                    error: "rate limit exceeded"
+                    details: "レート制限に達しました。しばらく待ってから再試行してください。"
+        '503':
+          description: KVストレージ障害
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                kvUnavailable:
+                  summary: KV読み込み失敗
+                  value:
+                    error: "service unavailable"
+                    details: "会話履歴の読み込みに失敗しました。しばらく待ってから再試行してください。"
+
+  /api/chat/{sessionId}/history:
+    get:
+      summary: 会話履歴取得
+      description: |
+        指定されたセッションIDの会話履歴を時系列順で取得します。
+
+        **データソース**:
+        1. KVストレージから最新50件を取得（優先）
+        2. KV失敗時はD1データベースからフォールバック
+
+        **パフォーマンス目標**: 200ms以内（SC-006）
+      operationId: getHistory
+      tags:
+        - Chat
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: セッションID（UUIDv4形式）
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: 会話履歴取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryResponse'
+              examples:
+                multipleMessages:
+                  summary: 複数メッセージの履歴
+                  value:
+                    sessionId: "550e8400-e29b-41d4-a716-446655440000"
+                    messages:
+                      - id: "msg-001"
+                        role: "user"
+                        content: "ECサイトのカート機能を実装したいです。"
+                        createdAt: 1729900000
+                      - id: "msg-002"
+                        role: "assistant"
+                        content: "カート機能について詳しく教えてください。"
+                        createdAt: 1729900005
+                      - id: "msg-003"
+                        role: "user"
+                        content: "はい、在庫管理も必要です。"
+                        createdAt: 1729900100
+                emptyHistory:
+                  summary: 空の履歴（新規セッション）
+                  value:
+                    sessionId: "550e8400-e29b-41d4-a716-446655440000"
+                    messages: []
+        '404':
+          description: セッションIDが存在しない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                sessionNotFound:
+                  summary: セッション未発見
+                  value:
+                    error: "session not found"
+                    details: "指定されたセッションIDは存在しません"
+        '503':
+          description: KVストレージおよびD1障害
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                storageUnavailable:
+                  summary: ストレージ全体障害
+                  value:
+                    error: "service unavailable"
+                    details: "会話履歴の読み込みに失敗しました。しばらく待ってから再試行してください。"
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: |
+            セッションID（UUIDv4形式）
+
+            **新規セッション**: 指定しない（またはnull）
+            **既存セッション**: 過去に取得したセッションIDを指定
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        message:
+          type: string
+          minLength: 1
+          maxLength: 102400
+          description: |
+            ユーザーメッセージ
+
+            **制約**:
+            - 1文字以上
+            - 100KB（102,400バイト）以下
+            - 不正な制御文字（NULL文字等）を含まない
+          example: "ECサイトのカート機能を実装したいです。商品を追加・削除・数量変更できるようにしたいです。"
+
+    ChatResponse:
+      type: object
+      required:
+        - sessionId
+        - response
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: |
+            セッションID（UUIDv4形式）
+
+            新規セッション作成時は新しいUUIDが返されます。
+            既存セッション継続時はリクエストと同じUUIDが返されます。
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        response:
+          type: string
+          description: |
+            AIの応答メッセージ
+
+            過去の会話履歴を踏まえた文脈理解のある応答が返されます。
+          example: "カート機能の実装について詳しく教えていただきありがとうございます。いくつか確認させてください。\n\n1. 在庫管理は必要ですか？\n2. ゲストユーザーでもカート機能を使用できるようにしますか？\n3. カート内の商品は何日間保持する予定ですか？"
+
+    HistoryResponse:
+      type: object
+      required:
+        - sessionId
+        - messages
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+          description: セッションID（UUIDv4形式）
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+          description: |
+            メッセージ配列（時系列順、古い順）
+
+            **注意**: KVストレージから取得する場合、最新50件のみ含まれます（FR-015）
+            全履歴が必要な場合はD1データベースから取得されます。
+
+    Message:
+      type: object
+      required:
+        - id
+        - role
+        - content
+        - createdAt
+      properties:
+        id:
+          type: string
+          description: メッセージID（UUIDv4形式）
+          example: "msg-550e8400-e29b-41d4-a716-446655440000"
+        role:
+          type: string
+          enum:
+            - user
+            - assistant
+          description: |
+            発言者
+
+            - `user`: ユーザーのメッセージ
+            - `assistant`: AIの応答
+          example: "user"
+        content:
+          type: string
+          description: メッセージ内容
+          example: "ECサイトのカート機能を実装したいです。"
+        createdAt:
+          type: integer
+          format: int64
+          description: |
+            送信日時（Unix epoch秒）
+
+            タイムスタンプはサーバー側で自動生成されます。
+          example: 1729900000
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: エラーコード（機械可読）
+          example: "message too large"
+        details:
+          type: string
+          description: エラー詳細（人間可読、日本語）
+          example: "メッセージは100KB以下である必要があります"
+
+  securitySchemes: {}
+
+security: []
