@@ -1,12 +1,12 @@
-import { Hono } from 'hono'
-import { zValidator } from '@hono/zod-validator'
-import { SpecGeneratorService } from '../services/spec-generator'
-import { SpecRepository } from '../repositories/spec-repository'
-import { specRequestSchema } from '../utils/validation'
-import { payloadSizeCheck } from '../middleware/payload-size-check'
-import { timeoutMiddleware } from '../middleware/timeout'
-import { logError, logInfo } from '../utils/logger'
-import type { SpecResponse } from '../types/response'
+import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
+import { SpecGeneratorService } from "../services/spec-generator";
+import { SpecRepository } from "../repositories/spec-repository";
+import { specRequestSchema } from "../utils/validation";
+import { payloadSizeCheck } from "../middleware/payload-size-check";
+import { timeoutMiddleware } from "../middleware/timeout";
+import { logError, logInfo } from "../utils/logger";
+import type { SpecResponse } from "../types/response";
 
 /**
  * /api/spec ルート
@@ -22,46 +22,46 @@ import type { SpecResponse } from '../types/response'
  * 6. レスポンス返却
  */
 
-const spec = new Hono<{ Bindings: Env }>()
+const spec = new Hono<{ Bindings: Cloudflare.Env }>();
 
 spec.post(
-  '/',
-  payloadSizeCheck,           // 100KB制限
-  timeoutMiddleware,           // 60秒タイムアウト
-  zValidator('json', specRequestSchema),  // zodバリデーション
+  "/",
+  payloadSizeCheck, // 100KB制限
+  timeoutMiddleware, // 60秒タイムアウト
+  zValidator("json", specRequestSchema), // zodバリデーション
   async (c) => {
-    const { requirements, projectName } = c.req.valid('json')
+    const { requirements, projectName } = c.req.valid("json");
 
-    logInfo('Spec generation started', { projectName })
+    logInfo("Spec generation started", { projectName });
 
     try {
       // Step 1: 仕様書生成（Mastraワークフロー呼び出し）
-      const service = new SpecGeneratorService()
-      const specResponse = await service.generate(requirements, projectName)
+      const service = new SpecGeneratorService();
+      const specResponse = await service.generate(requirements, projectName);
 
       // Step 2: D1に保存（ベストエフォート型：失敗してもユーザーには200を返す）
       try {
-        const repository = new SpecRepository(c.env.dev_architect_db)
+        const repository = new SpecRepository(c.env.dev_architect_db);
         await repository.create({
           requirements,
           projectName: projectName || null,
           analysis: specResponse.analysis,
           architecture: specResponse.architecture,
           specDraft: specResponse.specificationDraft,
-        })
-        logInfo('Spec saved to D1 successfully')
+        });
+        logInfo("Spec saved to D1 successfully");
       } catch (dbError) {
         // D1保存失敗はログのみ記録（FR-012: ベストエフォート型永続化）
-        logError('Failed to save spec to D1', dbError)
+        logError("Failed to save spec to D1", dbError);
       }
 
       // Step 3: レスポンス返却
-      return c.json<SpecResponse>(specResponse, 200)
+      return c.json<SpecResponse>(specResponse, 200);
     } catch (error) {
       // エラーは上位のerrorHandlerで処理される
-      throw error
+      throw error;
     }
-  }
-)
+  },
+);
 
-export default spec
+export default spec;

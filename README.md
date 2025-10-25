@@ -7,6 +7,21 @@
 AIスタートアップのエンジニアリングマネージャー向けに、要件整理と仕様書作成を対話的に支援するエージェント。
 チャットベースで要件をヒアリングし、システムアーキテクチャや仕様書を自動生成します。
 
+## 主要機能
+
+### Phase 1: 仕様書生成 (完了)
+- **POST /api/spec**: 要件から仕様書草稿を自動生成
+- Mastra + Gemini 2.5 Flash による AI生成
+- D1への仕様書永続化
+
+### Phase 2: 対話フロー + セッション管理 (完了)
+- **POST /api/chat**: マルチターン会話による要件精緻化
+- **GET /api/chat/:sessionId/history**: 会話履歴の取得
+- **Web UI**: ブラウザから利用可能な簡易チャットUI
+- KV/D1ハイブリッド永続化（50メッセージウィンドウ）
+- セッションの自動復元
+- XSS対策、レスポンシブデザイン対応
+
 ## 技術スタック
 
 - **エージェントフレームワーク**: Mastra
@@ -23,29 +38,57 @@ dev-architect/
 │   ├── memory/
 │   │   └── constitution.md      # プロジェクト憲法（開発原則）
 │   └── templates/               # 仕様書・タスク生成テンプレート
-│       ├── spec-template.md
-│       ├── plan-template.md
-│       └── tasks-template.md
 ├── src/
-│   └── index.ts                 # Honoアプリケーションエントリーポイント
+│   ├── index.ts                 # Honoアプリケーションエントリーポイント
+│   ├── routes/
+│   │   ├── spec.ts              # 仕様書生成API
+│   │   └── chat.ts              # チャットAPI (Phase 2)
+│   ├── repositories/            # D1データアクセス層
+│   │   ├── session-repository.ts
+│   │   └── message-repository.ts
+│   ├── services/                # ビジネスロジック
+│   │   └── chat-history.ts      # KV履歴管理
+│   ├── middleware/              # ミドルウェア
+│   │   └── message-validator.ts
+│   └── mastra/                  # Mastraエージェント
+│       └── agents/
+│           └── requirement-refiner.ts
+├── migrations/                  # D1マイグレーション
+│   ├── 0001_create_specs.sql
+│   └── 0002_create_sessions_messages.sql
 ├── public/                      # 静的ファイル（Cloudflare Assets）
-│   └── index.html
+│   └── index.html               # チャットUI (Phase 2)
+├── tests/                       # テストスイート
+│   ├── unit/                    # 単体テスト
+│   ├── integration/             # 統合テスト
+│   ├── contract/                # APIコントラクトテスト
+│   └── manual/                  # 手動テストチェックリスト
+├── specs/                       # 仕様書・設計ドキュメント
+│   ├── 001-spec-generation/     # Phase 1仕様
+│   └── 002-chat-session/        # Phase 2仕様
 ├── wrangler.jsonc               # Cloudflare Workers設定
-├── biome.json                   # Biome設定（リンター・フォーマッター）
 ├── tsconfig.json                # TypeScript設定
 ├── package.json                 # 依存関係・スクリプト
-└── worker-configuration.d.ts    # 自動生成された型定義（wrangler types）
+├── PROGRESS.md                  # 開発進捗管理
+└── worker-configuration.d.ts    # 自動生成された型定義
 ```
 
 ## Cloudflareリソース
 
 ### KV Namespace
 - **Binding**: `DEV_ARCHITECT_SESSIONS`
-- **用途**: セッション管理、会話履歴の一時保存
+- **用途**: 
+  - チャットセッション管理（Phase 2）
+  - 会話履歴の高速キャッシュ（50メッセージウィンドウ）
+  - KV primary → D1 fallback戦略
 
 ### D1 Database
 - **Binding**: `dev_architect_db`
-- **用途**: 構造化データの永続化（仕様書、プロジェクト情報等）
+- **用途**: 
+  - 仕様書の永続化（Phase 1）
+  - チャットセッション/メッセージの長期保存（Phase 2）
+  - KV障害時のフォールバック
+- **テーブル**: `specs`, `sessions`, `messages`
 
 ### R2 Bucket
 - **Binding**: `dev_architect_uploads`
@@ -56,14 +99,48 @@ dev-architect/
 ### セットアップ
 
 ```bash
-npm install
+pnpm install
+
+# 環境変数設定
+cp .dev.vars.example .dev.vars
+# .dev.varsにGOOGLE_GENERATIVE_AI_API_KEYを設定
+
+# .envファイル作成（Mastra用）
+cat .dev.vars > .env
+
+# D1マイグレーション適用
+pnpm wrangler d1 migrations apply dev_architect_db --local
 ```
 
 ### 開発サーバー起動
 
 ```bash
-npm run dev
+pnpm run dev
+# → http://localhost:8787 でチャットUIにアクセス
 ```
+
+### クイックスタート
+
+1. **チャットUIから使用**:
+   - ブラウザで http://localhost:8787 にアクセス
+   - メッセージ入力欄に要件を入力（例: 「ECサイトのカート機能を実装したいです」）
+   - AIとの対話的な要件精緻化が開始
+
+2. **API経由で使用**:
+   ```bash
+   # 新規チャットセッション作成
+   curl -X POST http://localhost:8787/api/chat \
+     -H "Content-Type: application/json" \
+     -d '{"message": "ECサイトのカート機能を実装したいです"}'
+   
+   # 既存セッション継続
+   curl -X POST http://localhost:8787/api/chat \
+     -H "Content-Type: application/json" \
+     -d '{"sessionId": "<sessionId>", "message": "在庫管理も必要です"}'
+   
+   # 会話履歴取得
+   curl http://localhost:8787/api/chat/<sessionId>/history
+   ```
 
 ### 型生成
 
