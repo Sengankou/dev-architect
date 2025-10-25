@@ -142,3 +142,10 @@ Speckitコマンドは別途定義されており、要件から仕様書を生�
 ## 会話履歴の管理
 
 Constitution要件: エージェントは全会話履歴を常にカバーする必要がある（コンテキストエンジニアリング前提）。会話の最初から最新までの全体的な流れを把握できるよう設計すること。
+
+## Active Technologies
+- TypeScript（Constitution要件、型安全性確保） + Hono（Webフレームワーク）, Mastra（エージェント）, Cloudflare Workers SDK, Gemini 2.5 Flash（LLM） (002-chat-session)
+- KVストレージ（DEV_ARCHITECT_SESSIONS、会話履歴一次保存）, D1データベース（dev_architect_db、永続化） (002-chat-session)
+
+## Recent Changes
+- 002-chat-session: Added TypeScript（Constitution要件、型安全性確保） + Hono（Webフレームワーク）, Mastra（エージェント）, Cloudflare Workers SDK, Gemini 2.5 Flash（LLM）
