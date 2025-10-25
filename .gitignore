@@ -38,3 +38,11 @@ lerna-debug.log*
 
 # mastra
 .mastra
+
+# test
+test-results/
+coverage/
+
+# cloudflare
+.wrangler/
+wrangler.toml.bak
